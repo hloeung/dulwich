@@ -50,6 +50,7 @@ _AUTHOR_HEADER = "author"
 _COMMITTER_HEADER = "committer"
 _ENCODING_HEADER = "encoding"
 _MERGETAG_HEADER = "mergetag"
+_GPGSIG_HEADER = "gpgsig"
 
 # Header fields for objects
 _OBJECT_HEADER = "object"
@@ -1031,6 +1032,7 @@ def parse_commit(chunks):
     commit_info = (None, None, (None, None))
     encoding = None
     mergetag = []
+    gpgsig = []
     message = None
 
     for field, value in _parse_message(chunks):
@@ -1050,6 +1052,8 @@ def parse_commit(chunks):
             encoding = value
         elif field == _MERGETAG_HEADER:
             mergetag.append(Tag.from_string(value + "\n"))
+        elif field == _GPGSIG_HEADER:
+            gpgsig.append(Tag.from_string(value + "\n"))
         elif field is None:
             message = value
         else:
@@ -1068,13 +1072,14 @@ class Commit(ShaFile):
                  '_commit_timezone_neg_utc', '_commit_time',
                  '_author_time', '_author_timezone', '_commit_timezone',
                  '_author', '_committer', '_parents', '_extra',
-                 '_encoding', '_tree', '_message', '_mergetag')
+                 '_encoding', '_tree', '_message', '_mergetag', '_gpgsig')
 
     def __init__(self):
         super(Commit, self).__init__()
         self._parents = []
         self._encoding = None
         self._mergetag = []
+        self._gpgsig = []
         self._extra = []
         self._author_timezone_neg_utc = False
         self._commit_timezone_neg_utc = False
@@ -1088,7 +1093,7 @@ class Commit(ShaFile):
 
     def _deserialize(self, chunks):
         (self._tree, self._parents, author_info, commit_info, self._encoding,
-                self._mergetag, self._message, self._extra) = \
+                self._mergetag, self._gpgsig, self._message, self._extra) = \
                         parse_commit(chunks)
         (self._author, self._author_time, (self._author_timezone,
             self._author_timezone_neg_utc)) = author_info
